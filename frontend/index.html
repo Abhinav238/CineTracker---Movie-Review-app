@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineTracker | Movie App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <i class="fas fa-film"></i>
+            <h1>CineTracker</h1>
+        </div>
+        <div class="nav-links">
+            <button id="homeButton" class="active"><i class="fas fa-home"></i> Home</button>
+            <button id="wishlistButton"><i class="fas fa-heart"></i> Wishlist</button>
+            <button id="darkModeToggle"><i class="fas fa-moon"></i></button>
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Login</button>
+            <button id="signupButton" class="auth-btn"><i class="fas fa-user-plus"></i> Sign Up</button>
+            <div id="userProfile" class="hidden">
+                <span id="userGreeting">Hello, User</span>
+                <button id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Auth Forms -->
+        <div id="authForms" class="hidden">
+            <div class="auth-container" id="loginForm">
+                <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter your username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Login</button>
+                </form>
+                <p>Don't have an account? <span id="switchToSignup" class="form-switch">Sign up here</span></p>
+                <div id="loginError" class="error-message"></div>
+            </div>
+
+            <div class="auth-container hidden" id="signupForm">
+                <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Sign Up</button>
+                </form>
+                <p>Already have an account? <span id="switchToLogin" class="form-switch">Login here</span></p>
+                <div id="signupError" class="error-message"></div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="mainContent">
+            <div class="hero-section">
+                <h1>Discover and Track Your Favorite Movies</h1>
+                <p>Search, review, and keep a wishlist of all your favorite films in one place.</p>
+                <div class="search-container">
+                    <input type="text" id="searchBox" placeholder="Search for a movie...">
+                    <button id="searchButton"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </div>
+
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="movieResults">Search Results</button>
+                <button class="tab-btn" data-tab="wishlistContent">My Wishlist</button>
+            </div>
+
+            <div id="loadingSpinner" class="hidden">
+                <div class="spinner"></div>
+                <p>Loading...</p>
+            </div>
+
+            <div id="alertContainer" class="hidden"></div>
+            
+            <div class="tab-content active" id="movieResults"></div>
+            <div class="tab-content" id="wishlistContent"></div>
+
+            <!-- Movie Detail Modal -->
+            <div id="movieModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <div id="movieDetailContent"></div>
+                </div>
+            </div>
+
+            <!-- Review Modal -->
+            <div id="reviewModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Write a Review</h2>
+                    <form id="reviewForm">
+                        <input type="hidden" id="reviewMovieId">
+                        <div class="rating-container">
+                            <p>Your Rating:</p>
+                            <div class="stars">
+                                <i class="fas fa-star" data-rating="1"></i>
+                                <i class="fas fa-star" data-rating="2"></i>
+                                <i class="fas fa-star" data-rating="3"></i>
+                                <i class="fas fa-star" data-rating="4"></i>
+                                <i class="fas fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="ratingValue" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewText">Your Review:</label>
+                            <textarea id="reviewText" rows="5" placeholder="Share your thoughts about this movie..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-review-btn">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-film"></i>
+                <h2>CineTracker</h2>
+            </div>
+            <p>&copy; 2025 CineTracker. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
