@@ -1,4 +1,8 @@
-const BASE_URL = "http://localhost:5000"; // Leave empty for relative paths or set to your server URL
+// Keep the API hostname aligned with the page hostname so the authentication
+// cookie is sent whether Live Server uses localhost or 127.0.0.1.
+const BASE_URL = window.location.hostname
+    ? `http://${window.location.hostname}:5000`
+    : "http://localhost:5000";
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -71,7 +75,15 @@ document.addEventListener("DOMContentLoaded", function () {
     tabButtons.forEach(button => {
         button.addEventListener("click", () => {
             const tabName = button.getAttribute("data-tab");
-            switchTab(tabName);
+            // The "My Wishlist" tab and the navigation Wishlist button should
+            // always show the same freshly loaded data.
+            if (tabName === "wishlistContent") {
+                showWishlist();
+            } else {
+                homeButton.classList.add("active");
+                wishlistButton.classList.remove("active");
+                switchTab(tabName);
+            }
         });
     });
 
@@ -136,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Authentication Functions
     function checkAuthStatus() {
         showLoading();
-        fetch(`${BASE_URL}/api/auth-status`)
+        fetch(`${BASE_URL}/api/auth-status`, { credentials: "include" })
             .then(response => response.json())
             .then(data => {
                 if (data.authenticated) {
@@ -183,6 +195,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     currentUser = data.user;
                     updateUIForLoggedInUser();
                     hideAuthForms();
+                    // If login started from the wishlist, replace the signed-out
+                    // placeholder with this user's current wishlist right away.
+                    if (wishlistContent.classList.contains("active")) {
+                        fetchWishlist();
+                    }
                     showAlert("Login successful!", "success");
                 } else {
                     document.getElementById("loginError").textContent = data.message;
@@ -244,12 +261,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function logoutUser() {
         fetch(`${BASE_URL}/api/logout`, {
-            method: "POST"
+            method: "POST",
+            credentials: "include"
         })
             .then(response => response.json())
             .then(data => {
                 currentUser = null;
                 updateUIForLoggedOutUser();
+                // Clear cards rendered for the previous user immediately.
+                fetchWishlist();
                 showAlert("Logged out successfully", "info");
             })
             .catch(error => {
@@ -529,28 +549,15 @@ document.addEventListener("DOMContentLoaded", function () {
         applyDarkMode();
     }
 
-
-function applyDarkMode() {
-    const icon = darkModeToggle.querySelector("i");
-
-    document.body.classList.toggle("dark-mode", darkMode);
-
-    icon.classList.add("icon-changing");
-
-    setTimeout(() => {
-        darkModeToggle.innerHTML = darkMode
-            ? '<i class="fas fa-sun"></i>'
-            : '<i class="fas fa-moon"></i>';
-
-        const newIcon = darkModeToggle.querySelector("i");
-        newIcon.classList.add("icon-changing");
-
-        requestAnimationFrame(() => {
-            newIcon.classList.remove("icon-changing");
-        });
-    }, 150);
-}
-
+    function applyDarkMode() {
+        if (darkMode) {
+            document.body.classList.add("dark-mode");
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            document.body.classList.remove("dark-mode");
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    }
 
     function showLoginForm() {
         authForms.classList.remove("hidden");
@@ -636,7 +643,8 @@ function applyDarkMode() {
 function toggleWishlist(movieId, movieTitle, posterUrl) {
     // Check if user is logged in
     if (!document.getElementById("userProfile").classList.contains("hidden")) {
-        const wishlistBtn = event.target.closest(".wishlist-btn");
+        const clicked = window.event && window.event.target ? window.event.target : null;
+        const wishlistBtn = clicked ? clicked.closest(".wishlist-btn") : null;
         
         fetch(`${BASE_URL}/api/wishlist`, {
             method: "POST",
@@ -653,18 +661,24 @@ function toggleWishlist(movieId, movieTitle, posterUrl) {
             .then(response => response.json())
             .then(data => {
                 if (data.status === "added") {
-                    wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Remove';
-                    wishlistBtn.classList.add("active");
+                    if (wishlistBtn) {
+                        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Remove';
+                        wishlistBtn.classList.add("active");
+                    }
                     showAlert("Added to wishlist", "success");
                 } else if (data.status === "removed") {
-                    wishlistBtn.innerHTML = '<i class="far fa-heart"></i> Wishlist';
-                    wishlistBtn.classList.remove("active");
+                    if (wishlistBtn) {
+                        wishlistBtn.innerHTML = '<i class="far fa-heart"></i> Wishlist';
+                        wishlistBtn.classList.remove("active");
+                    }
                     showAlert("Removed from wishlist", "info");
                     
                     // If we're on the wishlist page, refresh it
                     if (document.getElementById("wishlistContent").classList.contains("active")) {
                         fetchWishlist();
                     }
+                } else {
+                    showAlert(data.message || "Error updating wishlist", "error");
                 }
             })
             .catch(error => {
@@ -678,7 +692,7 @@ function toggleWishlist(movieId, movieTitle, posterUrl) {
 }
 
 function removeFromWishlist(movieId) {
-    fetch(`/api/wishlist/${movieId}`, {
+    fetch(`${BASE_URL}/api/wishlist/${movieId}`, {
         method: "DELETE",
         credentials: 'include'
     })
@@ -707,7 +721,7 @@ function openReviewForm(movieId) {
         const stars = document.querySelectorAll("#reviewForm .stars i");
         stars.forEach(star => star.classList.remove("active"));
         
-        reviewModal.classList.remove("hidden");
+        document.getElementById("reviewModal").classList.remove("hidden");
     } else {
         showAlert("Please log in to write a review", "error");
         showLoginForm();
@@ -761,7 +775,7 @@ function fetchWishlist() {
     const loadingSpinner = document.getElementById("loadingSpinner");
     loadingSpinner.classList.remove("hidden");
     
-    fetch("/api/wishlist", {
+    fetch(`${BASE_URL}/api/wishlist`, {
         credentials: 'include'
     })
         .then(response => response.json())
@@ -875,7 +889,7 @@ function showMovieDetails(movieId) {
                 
                 // Check if this movie is in user's wishlist to update button state
                 if (!document.getElementById("userProfile").classList.contains("hidden")) {
-                    fetch(`/api/wishlist/check/${movieId}`, {
+                    fetch(`${BASE_URL}/api/wishlist/check/${movieId}`, {
                         credentials: 'include'
                     })
                         .then(response => response.json())
@@ -905,7 +919,7 @@ function showMovieDetails(movieId) {
 function fetchReviews(movieId) {
     const reviewsContainer = document.getElementById("movieReviews");
     
-    fetch(`/api/reviews/${movieId}`)
+    fetch(`${BASE_URL}/api/reviews/${movieId}`)
         .then(response => response.json())
         .then(data => {
             if (data.reviews && data.reviews.length > 0) {
@@ -963,7 +977,7 @@ function submitReview(movieId, rating, reviewText) {
                 // Refresh the reviews
                 fetchReviews(movieId);
             } else {
-                showAlert("Error submitting review", "error");
+                showAlert(data.message || "Error submitting review", "error");
             }
         })
         .catch(error => {

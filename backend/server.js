@@ -30,7 +30,14 @@ app.use(session({
 }));
 
 app.use(cors({
-    origin: ["http://localhost:5500", "http://127.0.0.1:5500"], // ✅ allow both  //origin: ["http://localhost:5500", "http://127.0.0.1:5500"], // ✅ allow both
+    origin: (origin, callback) => {
+        // Allow the frontend when it is served locally, regardless of the
+        // development-server port (for example Live Server or VS Code).
+        if (!origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+            return callback(null, true);
+        }
+        callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true
 }));
 app.use(express.json());

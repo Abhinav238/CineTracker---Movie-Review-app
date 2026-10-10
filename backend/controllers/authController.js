@@ -44,7 +44,11 @@ exports.login = (req, res) => {
 };
 
 exports.logout = (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: false
+    });
     res.json({ message: "Logged out successfully" });
 };
 

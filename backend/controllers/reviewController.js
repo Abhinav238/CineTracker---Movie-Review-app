@@ -3,12 +3,20 @@ const db = require("../models/db");
 
 exports.submitReview = (req, res) => {
     const { movieId, rating, reviewText } = req.body;
+    const numericRating = Number(rating);
+
+    if (!movieId || !Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+        return res.status(400).json({ message: "Choose a rating from 1 to 5" });
+    }
 
     db.query(
         "INSERT INTO reviews (user_id, movie_id, rating, review_text) VALUES (?, ?, ?, ?)",
-        [req.user.id, movieId, rating, reviewText],
+        [req.user.id, movieId, numericRating, reviewText || ""],
         (err) => {
-            if (err) return res.json({ message: "Failed to add review" });
+            if (err) {
+                console.error("Failed to add review:", err);
+                return res.status(500).json({ message: "Could not add review" });
+            }
             res.json({ message: "Review added successfully" });
         }
     );
