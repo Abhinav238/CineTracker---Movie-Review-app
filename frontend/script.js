@@ -529,15 +529,28 @@ document.addEventListener("DOMContentLoaded", function () {
         applyDarkMode();
     }
 
-    function applyDarkMode() {
-        if (darkMode) {
-            document.body.classList.add("dark-mode");
-            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            document.body.classList.remove("dark-mode");
-            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-        }
-    }
+
+function applyDarkMode() {
+    const icon = darkModeToggle.querySelector("i");
+
+    document.body.classList.toggle("dark-mode", darkMode);
+
+    icon.classList.add("icon-changing");
+
+    setTimeout(() => {
+        darkModeToggle.innerHTML = darkMode
+            ? '<i class="fas fa-sun"></i>'
+            : '<i class="fas fa-moon"></i>';
+
+        const newIcon = darkModeToggle.querySelector("i");
+        newIcon.classList.add("icon-changing");
+
+        requestAnimationFrame(() => {
+            newIcon.classList.remove("icon-changing");
+        });
+    }, 150);
+}
+
 
     function showLoginForm() {
         authForms.classList.remove("hidden");
