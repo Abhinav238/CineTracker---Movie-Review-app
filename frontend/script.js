@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchBox = document.getElementById("searchBox");
     const searchButton = document.getElementById("searchButton");
     const movieResults = document.getElementById("movieResults");
+    const recommendedMovies = document.getElementById("recommendedMovies");
     const wishlistContent = document.getElementById("wishlistContent");
     const darkModeToggle = document.getElementById("darkModeToggle");
     const loginButton = document.getElementById("loginButton");
@@ -36,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const homeButton = document.getElementById("homeButton");
     const wishlistButton = document.getElementById("wishlistButton");
     const mainContent = document.getElementById("mainContent");
-    const reviewStars = document.querySelectorAll("#reviewForm .stars i");
+    const reviewStars = document.querySelectorAll("#reviewForm .stars button");
     const reviewForm = document.getElementById("reviewForm");
 
     // App State
@@ -109,13 +110,16 @@ document.addEventListener("DOMContentLoaded", function () {
         star.addEventListener("click", () => {
             const rating = star.getAttribute("data-rating");
             document.getElementById("ratingValue").value = rating;
+            document.getElementById("ratingDescription").textContent = `${rating} out of 5`;
             
             // Update visual state
             reviewStars.forEach(s => {
                 if (s.getAttribute("data-rating") <= rating) {
                     s.classList.add("active");
+                    s.setAttribute("aria-checked", "true");
                 } else {
                     s.classList.remove("active");
+                    s.setAttribute("aria-checked", "false");
                 }
             });
         });
@@ -144,6 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initialize
     applyDarkMode();
+    displayRecommendations();
 
     // Authentication Functions
     function checkAuthStatus() {
@@ -317,15 +322,68 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function displayMovies(movies) {
+        movieResults.innerHTML = createMovieCards(movies);
+    }
+
+    function displayRecommendations() {
+        const recommendationPosters = {
+            tt0111161: "https://image.tmdb.org/t/p/w500/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg",
+            tt1375666: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+            tt4154796: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+            tt0816692: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+            tt0468569: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+            tt0109830: "https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+            tt0133093: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+            tt0120737: "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+            tt6751668: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+            tt2582802: "https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+            tt7286456: "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg"
+        };
+        const recommendations = [
+            { imdbID: "tt0111161", Title: "The Shawshank Redemption", Year: "1994", Poster: "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzYtYzVlMC00MzM0LWJhY2UtOWQ2NThhZGIyYzY0XkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt1375666", Title: "Inception", Year: "2010", Poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzYzODQ4Nl5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg" },
+            { imdbID: "tt4154796", Title: "Avengers: Endgame", Year: "2019", Poster: "https://m.media-amazon.com/images/M/MV5BMTc5MDY1Mzg5MV5BMl5BanBnXkFtZTgwMTQ2MzIwNzM@._V1_SX300.jpg" },
+            { imdbID: "tt0816692", Title: "Interstellar", Year: "2014", Poster: "https://m.media-amazon.com/images/M/MV5BMjIxNjgxOTYwNV5BMl5BanBnXkFtZTgwODE2MTMxMTE@._V1_SX300.jpg" },
+            { imdbID: "tt0468569", Title: "The Dark Knight", Year: "2008", Poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODI1Nl5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg" },
+            { imdbID: "tt0109830", Title: "Forrest Gump", Year: "1994", Poster: "https://m.media-amazon.com/images/M/MV5BNWIwYmY0ZGUtY2ZiZC00ODg0LTk5YzAtOWFhNjQ1ODZhZjYwXkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt0133093", Title: "The Matrix", Year: "1999", Poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3NzAtNzQ2My00MmM5LWEyYzItMGFkYjE4YjVlZTRiXkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt0120737", Title: "The Lord of the Rings: The Fellowship of the Ring", Year: "2001", Poster: "https://m.media-amazon.com/images/M/MV5BN2EyZjM1NzktZmNhNC00ZTAwLWFmZGQtYWQyM2M0NjA5OTYzXkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt6751668", Title: "Parasite", Year: "2019", Poster: "https://m.media-amazon.com/images/M/MV5BYWY1MzdkMjQtNzU3OC00MTA1LWEyOTYtZWZmOGU1N2ZlN2Q0XkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt2582802", Title: "Whiplash", Year: "2014", Poster: "https://m.media-amazon.com/images/M/MV5BMjM2MDM3MDk3OV5BMl5BanBnXkFtZTgwNjM5MjM2MTE@._V1_SX300.jpg" },
+            { imdbID: "tt7286456", Title: "Joker", Year: "2019", Poster: "https://m.media-amazon.com/images/M/MV5BYmY0YmY3ZDUtYWU4MC00ZjBjLTlhM2QtY2RhZTVlM2YwZTY1XkEyXkFqcGc@._V1_SX300.jpg" },
+            { imdbID: "tt2380307", Title: "Coco", Year: "2017", Poster: "https://m.media-amazon.com/images/M/MV5BNWQ4OTZiNTctMGE3YS00YmM2LTg4MzItNThjY2Y2ZGZkNTRmXkEyXkFqcGc@._V1_SX300.jpg" }
+        ];
+
+        // A new shuffled selection is shown every time the page is loaded.
+        const shuffledRecommendations = recommendations
+            .map((movie, index) => ({
+                ...movie,
+                Poster: recommendationPosters[movie.imdbID] || movie.Poster,
+                isRecommendation: true,
+                artworkStyle: index % 6
+            }))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 10);
+
+        recommendedMovies.innerHTML = createMovieCards(shuffledRecommendations);
+    }
+
+    function createMovieCards(movies) {
         let output = "";
         
         movies.forEach(movie => {
             const posterUrl = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/300x450?text=No+Poster";
+            const posterMarkup = movie.isRecommendation
+                ? `<div class="recommendation-art artwork-${movie.artworkStyle}">
+                        <i class="fas fa-film"></i>
+                        <span>${movie.Title}</span>
+                   </div>`
+                : `<img src="${posterUrl}" alt="${movie.Title}" onerror="this.remove(); this.parentElement.classList.add('poster-unavailable');">`;
             
             output += `
                 <div class="movie-card">
                     <div class="movie-image">
-                        <img src="${posterUrl}" alt="${movie.Title}">
+                        ${posterMarkup}
                     </div>
                     <div class="movie-info">
                         <h3 class="movie-title">${movie.Title}</h3>
@@ -343,7 +401,7 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         });
         
-        movieResults.innerHTML = output;
+        return output;
     }
 
     function showMovieDetails(movieId) {
@@ -584,7 +642,7 @@ document.addEventListener("DOMContentLoaded", function () {
         hideAuthForms();
         homeButton.classList.add("active");
         wishlistButton.classList.remove("active");
-        switchTab("movieResults");
+        switchTab("homeContent");
     }
 
     function showWishlist() {
@@ -716,10 +774,14 @@ function openReviewForm(movieId) {
         document.getElementById("reviewMovieId").value = movieId;
         document.getElementById("ratingValue").value = "0";
         document.getElementById("reviewText").value = "";
+        document.getElementById("ratingDescription").textContent = "Choose a rating";
         
         // Reset star UI
-        const stars = document.querySelectorAll("#reviewForm .stars i");
-        stars.forEach(star => star.classList.remove("active"));
+        const stars = document.querySelectorAll("#reviewForm .stars button");
+        stars.forEach(star => {
+            star.classList.remove("active");
+            star.setAttribute("aria-checked", "false");
+        });
         
         document.getElementById("reviewModal").classList.remove("hidden");
     } else {
@@ -928,6 +990,14 @@ function fetchReviews(movieId) {
                 data.reviews.forEach(review => {
                     const date = new Date(review.created_at).toLocaleDateString();
                     const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+                    const isCurrentUsersReview = !document.getElementById("userProfile").classList.contains("hidden")
+                        && document.getElementById("userGreeting").textContent === `Hello, ${review.username}`;
+                    const reviewActions = isCurrentUsersReview
+                        ? `<div class="review-actions">
+                                <button class="edit-review-btn" onclick="editReview('${review.id}', '${encodeURIComponent(review.review_text)}', '${movieId}')"><i class="fas fa-pen"></i> Edit</button>
+                                <button class="delete-review-btn" onclick="deleteReview('${review.id}', '${movieId}')"><i class="fas fa-trash-alt"></i> Delete</button>
+                           </div>`
+                        : "";
                     
                     reviewsHTML += `
                         <div class="review-item">
@@ -937,6 +1007,7 @@ function fetchReviews(movieId) {
                             </div>
                             <div class="review-rating">${stars}</div>
                             <div class="review-content">${review.review_text}</div>
+                            ${reviewActions}
                         </div>
                     `;
                 });
@@ -950,6 +1021,85 @@ function fetchReviews(movieId) {
             console.error("Error fetching reviews:", error);
             reviewsContainer.innerHTML = "<p>Error loading reviews</p>";
         });
+}
+
+function editReview(reviewId, encodedReviewText, movieId) {
+    const modal = document.getElementById("editReviewModal");
+    const textarea = document.getElementById("editReviewText");
+
+    modal.dataset.reviewId = reviewId;
+    modal.dataset.movieId = movieId;
+    textarea.value = decodeURIComponent(encodedReviewText);
+    modal.classList.remove("hidden");
+    textarea.focus();
+}
+
+function saveEditedReview() {
+    const modal = document.getElementById("editReviewModal");
+    const reviewId = modal.dataset.reviewId;
+    const movieId = modal.dataset.movieId;
+    const updatedText = document.getElementById("editReviewText").value.trim();
+
+    if (!updatedText) {
+        showAlert("Your review cannot be empty", "error");
+        return;
+    }
+
+    fetch(`${BASE_URL}/api/reviews/${reviewId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reviewText: updatedText })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === "Review updated successfully") {
+                closeReviewDialogs();
+                showAlert("Review updated successfully", "success");
+                fetchReviews(movieId);
+            } else {
+                showAlert(data.message || "Could not update review", "error");
+            }
+        })
+        .catch(() => showAlert("Could not update review", "error"));
+}
+
+function deleteReview(reviewId, movieId) {
+    const modal = document.getElementById("deleteReviewModal");
+    modal.dataset.reviewId = reviewId;
+    modal.dataset.movieId = movieId;
+    modal.classList.remove("hidden");
+}
+
+function confirmDeleteReview() {
+    const modal = document.getElementById("deleteReviewModal");
+    const reviewId = modal.dataset.reviewId;
+    const movieId = modal.dataset.movieId;
+
+    fetch(`${BASE_URL}/api/reviews/${reviewId}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === "Review deleted successfully") {
+                closeReviewDialogs();
+                showAlert("Review deleted successfully", "success");
+                fetchReviews(movieId);
+            } else {
+                showAlert(data.message || "Could not delete review", "error");
+            }
+        })
+        .catch(() => showAlert("Could not delete review", "error"));
+}
+
+function closeReviewDialogs() {
+    document.getElementById("editReviewModal").classList.add("hidden");
+    document.getElementById("deleteReviewModal").classList.add("hidden");
+}
+
+function closeNewReviewModal() {
+    document.getElementById("reviewModal").classList.add("hidden");
 }
 
 function submitReview(movieId, rating, reviewText) {

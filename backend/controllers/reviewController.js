@@ -35,3 +35,43 @@ exports.getReviews = (req, res) => {
         }
     );
 };
+
+exports.updateReview = (req, res) => {
+    const { reviewText } = req.body;
+
+    if (typeof reviewText !== "string" || !reviewText.trim()) {
+        return res.status(400).json({ message: "A review comment is required" });
+    }
+
+    db.query(
+        "UPDATE reviews SET review_text = ? WHERE id = ? AND user_id = ?",
+        [reviewText.trim(), req.params.reviewId, req.user.id],
+        (err, result) => {
+            if (err) {
+                console.error("Failed to update review:", err);
+                return res.status(500).json({ message: "Could not update review" });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: "Review not found or not yours to edit" });
+            }
+            res.json({ message: "Review updated successfully" });
+        }
+    );
+};
+
+exports.deleteReview = (req, res) => {
+    db.query(
+        "DELETE FROM reviews WHERE id = ? AND user_id = ?",
+        [req.params.reviewId, req.user.id],
+        (err, result) => {
+            if (err) {
+                console.error("Failed to delete review:", err);
+                return res.status(500).json({ message: "Could not delete review" });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: "Review not found or not yours to delete" });
+            }
+            res.json({ message: "Review deleted successfully" });
+        }
+    );
+};

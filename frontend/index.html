@@ -87,7 +87,8 @@
             </div>
 
             <div class="tabs-container">
-                <button class="tab-btn active" data-tab="movieResults">Search Results</button>
+                <button class="tab-btn active" data-tab="homeContent">Recommendations</button>
+                <button class="tab-btn" data-tab="movieResults">Search Results</button>
                 <button class="tab-btn" data-tab="wishlistContent">My Wishlist</button>
             </div>
 
@@ -98,7 +99,15 @@
 
             <div id="alertContainer" class="hidden"></div>
             
-            <div class="tab-content active" id="movieResults"></div>
+            <div class="tab-content active" id="homeContent">
+                <div class="section-heading">
+                    <span class="section-kicker"><i class="fas fa-sparkles"></i> START WATCHING</span>
+                    <h2>Recommended for you</h2>
+                    <p>A few great movies to discover before you start searching.</p>
+                </div>
+                <div id="recommendedMovies" class="movie-grid"></div>
+            </div>
+            <div class="tab-content" id="movieResults"></div>
             <div class="tab-content" id="wishlistContent"></div>
 
             <!-- Movie Detail Modal -->
@@ -111,28 +120,63 @@
 
             <!-- Review Modal -->
             <div id="reviewModal" class="modal hidden">
-                <div class="modal-content">
-                    <span class="close-modal">&times;</span>
-                    <h2>Write a Review</h2>
+                <div class="modal-content review-dialog new-review-dialog">
+                    <button class="dialog-close" type="button" onclick="closeNewReviewModal()" aria-label="Close">&times;</button>
+                    <div class="dialog-icon edit-dialog-icon"><i class="fas fa-star"></i></div>
+                    <h2>Share your review</h2>
+                    <p>Tell other movie lovers what you thought.</p>
                     <form id="reviewForm">
                         <input type="hidden" id="reviewMovieId">
                         <div class="rating-container">
-                            <p>Your Rating:</p>
-                            <div class="stars">
-                                <i class="fas fa-star" data-rating="1"></i>
-                                <i class="fas fa-star" data-rating="2"></i>
-                                <i class="fas fa-star" data-rating="3"></i>
-                                <i class="fas fa-star" data-rating="4"></i>
-                                <i class="fas fa-star" data-rating="5"></i>
+                            <div class="rating-heading">
+                                <label>Your rating</label>
+                                <span id="ratingDescription">Choose a rating</span>
+                            </div>
+                            <div class="stars" role="radiogroup" aria-label="Your rating">
+                                <button type="button" aria-label="1 star" data-rating="1"><i class="fas fa-star"></i></button>
+                                <button type="button" aria-label="2 stars" data-rating="2"><i class="fas fa-star"></i></button>
+                                <button type="button" aria-label="3 stars" data-rating="3"><i class="fas fa-star"></i></button>
+                                <button type="button" aria-label="4 stars" data-rating="4"><i class="fas fa-star"></i></button>
+                                <button type="button" aria-label="5 stars" data-rating="5"><i class="fas fa-star"></i></button>
                             </div>
                             <input type="hidden" id="ratingValue" value="0">
                         </div>
                         <div class="form-group">
-                            <label for="reviewText">Your Review:</label>
-                            <textarea id="reviewText" rows="5" placeholder="Share your thoughts about this movie..."></textarea>
+                            <div class="rating-heading"><label for="reviewText">Your review</label><span>Optional</span></div>
+                            <textarea id="reviewText" rows="5" placeholder="What stood out to you? Share the story, acting, or your favorite moment."></textarea>
                         </div>
-                        <button type="submit" class="submit-review-btn">Submit Review</button>
+                        <div class="dialog-actions">
+                            <button class="dialog-cancel" type="button" onclick="closeNewReviewModal()">Cancel</button>
+                            <button type="submit" class="submit-review-btn">Publish review</button>
+                        </div>
                     </form>
+                </div>
+            </div>
+
+            <div id="editReviewModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editReviewTitle">
+                <div class="modal-content review-dialog">
+                    <button class="dialog-close" type="button" onclick="closeReviewDialogs()" aria-label="Close">&times;</button>
+                    <div class="dialog-icon edit-dialog-icon"><i class="fas fa-pen"></i></div>
+                    <h2 id="editReviewTitle">Edit your review</h2>
+                    <p>Update your thoughts, then save when you are ready.</p>
+                    <textarea id="editReviewText" rows="5" placeholder="Write your review..."></textarea>
+                    <div class="dialog-actions">
+                        <button class="dialog-cancel" type="button" onclick="closeReviewDialogs()">Cancel</button>
+                        <button class="dialog-confirm" type="button" onclick="saveEditedReview()">Save changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deleteReviewModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteReviewTitle">
+                <div class="modal-content review-dialog delete-dialog">
+                    <button class="dialog-close" type="button" onclick="closeReviewDialogs()" aria-label="Close">&times;</button>
+                    <div class="dialog-icon delete-dialog-icon"><i class="fas fa-trash-alt"></i></div>
+                    <h2 id="deleteReviewTitle">Delete this review?</h2>
+                    <p>This will permanently remove your review. This action cannot be undone.</p>
+                    <div class="dialog-actions">
+                        <button class="dialog-cancel" type="button" onclick="closeReviewDialogs()">Keep review</button>
+                        <button class="dialog-delete" type="button" onclick="confirmDeleteReview()">Delete review</button>
+                    </div>
                 </div>
             </div>
         </div>
