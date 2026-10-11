@@ -96,14 +96,6 @@ Serve the `frontend` folder with a local static server, such as the VS Code Live
 
 The included `.gitignore` prevents dependency folders, `.env` secrets, logs, generated files, database exports, and local editor files from being committed. Commit `backend/package.json` and `backend/package-lock.json`; other developers can restore dependencies by running `npm install`.
 
-If `node_modules` was already committed on another branch, remove it from Git tracking while keeping the local folder:
-
-```bash
-git rm -r --cached backend/node_modules
-git commit -m "Stop tracking dependencies"
-git push
-```
-
 ## Security note
 
 Never commit API keys, database passwords, or JWT secrets. If a secret was previously pushed to GitHub, replace it immediately and remove it from the repository history if it was exposed publicly.
